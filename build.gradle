@@ -47,6 +47,7 @@ project(":desktop") {
         compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
         compile "com.badlogicgames.gdx:gdx-tools:$gdxVersion"
         compile "com.squidpony:squidlib-util:$squidVersion:sources"
+        compile "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-desktop"
     }
 }
 
@@ -73,6 +74,7 @@ project(":core") {
         compile "com.badlogicgames.gdx:gdx:$gdxVersion"
         compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
         compile "com.squidpony:squidlib-util:$squidVersion:sources"
+        compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"  // use freetype font instead of bitmap font
     }
 }
 
