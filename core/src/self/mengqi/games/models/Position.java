@@ -67,7 +67,6 @@ public class Position implements HumanFriendly {
     @Override
     public String toReadableString() {
         return dimension == 3 ?
-            String.format("@(%f.2, %f.2, %f.2)", x, y, z) : String.format("@(%f.2, %f.2)", x, y);
-        // FIXME .2 precision format not working
+            String.format("@(%.2f, %.2f, %.2f)", x, y, z) : String.format("@(%.2f, %.2f)", x, y);
     }
 }

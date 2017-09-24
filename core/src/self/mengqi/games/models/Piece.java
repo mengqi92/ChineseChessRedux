@@ -1,12 +1,12 @@
 package self.mengqi.games.models;
 
 import self.mengqi.games.common.HumanFriendly;
+import self.mengqi.games.utils.LogUtils;
 
 import java.util.HashMap;
 
 import static self.mengqi.games.models.Piece.Status.Activated;
 import static self.mengqi.games.models.Piece.Status.Idle;
-import static self.mengqi.games.utils.LogUtils.logging;
 
 /**
  * Created by Mengqi on 2017/9/16.
@@ -35,22 +35,12 @@ public class Piece implements HumanFriendly {
     }
 
     /**
-     * move to destination
+     * tryToMove to destination
      * @param destination
      */
-    // TODO 通过 AOP 打 log
     public void move(Coordinate destination) {
-        logging("piece", this, destination);
+        LogUtils.debugging("piece", this, destination);
         coordinate = destination;
-    }
-
-    /**
-     * try to attack another piece
-     * @param targetPiece 目标子
-     */
-    public void attack(Piece targetPiece) {
-        // TODO 判断走子是否合法，如果合法则吃子
-        logging("piece", this, targetPiece);
     }
 
     /**
@@ -65,7 +55,19 @@ public class Piece implements HumanFriendly {
                 status = Idle;
                 break;
         }
-        logging("piece", this, "toglle activated");
+        LogUtils.debugging("piece", this, "toglle activated");
+    }
+
+    /**
+     * whether if the piece has crossed river
+     * @return true if the piece is on the other side
+     */
+    public boolean crossedRiver() {
+        if (faction == Faction.Black) {
+            return Coordinate.redField.within(coordinate);
+        } else {
+            return Coordinate.blackField.within(coordinate);
+        }
     }
 
     static class PieceNotFoundException extends Exception {

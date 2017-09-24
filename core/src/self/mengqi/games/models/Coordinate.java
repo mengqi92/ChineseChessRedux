@@ -2,6 +2,9 @@ package self.mengqi.games.models;
 
 import self.mengqi.games.common.HumanFriendly;
 
+import static self.mengqi.games.models.Piece.Faction.Black;
+import static self.mengqi.games.models.Piece.Faction.Red;
+
 /**
 * Created by Mengqi on 2017/9/16.
 * 这个类表示棋盘坐标，示意如下
@@ -9,11 +12,11 @@ import self.mengqi.games.common.HumanFriendly;
 *
   (1, 10)                            (9, 10)   // Coordinate
   (47, 50)                           (527, 50) // Position
-  |===+===+===+===+===+===+===+===|  -          +---->
+  |===+===+===O===O===O===+===+===|  -          +---->
   |   |   |   |   |   |   |   |   | (60)        |
-  |---|---|---|---|---|---|---|---|  -          V
+  |---|---|---O---|---O---|---|---|  -          V
   |   |   |   |   |   |   |   |   |
-  |---|---|---|---|---|---|---|---|
+  |---|---|---O---O---O---|---|---|
   |   |   |   |   |   |   |   |   |
   |---|---|---|---|---|---|---|---|
   |   |   |   |   |   |   |   |   |
@@ -23,18 +26,17 @@ import self.mengqi.games.common.HumanFriendly;
   |   |   |   |   |   |   |   |   |
   |---|---|---|---|---|---|---|---|
   |   |   |   |   |   |   |   |   |
-  |---|---|---|---|---|---|---|---|
+  |---|---|---O---O---O---|---|---|
   |   |   |   |   |   |   |   |   |
-  |---|---|---|---|---|---|---|---|
+  |---|---|---O---|---O---|---|---|
   |   |   |   |   |   |   |   |   |
-  |===+===+===+===+===+===+===+===|
+  |===+===+===O===O===O===+===+===|
   (47, 530)                        (527, 530)   // Position
-  (1, 1)                           (9, 1)       // Coordinate
+  (1, 1)      (4, 1)  (6, 1)       (9, 1)       // Coordinate
 */
 public class Coordinate implements HumanFriendly {
-    // TODO 工厂方法创建 Coordinate 实例，提高创建效率
-    public int x;
-    public int y;
+    int x;
+    int y;
 
     static final int LEFT = 1;
     static final int BOTTOM = 1;
@@ -44,18 +46,200 @@ public class Coordinate implements HumanFriendly {
     static final int RED_TOP = 5;       // 红方最顶行
     static final int BLACK_BOTTOM = 6;  // 黑方最底行
 
-    public Coordinate(int x, int y) {
+    static final Region blackField = new Region(LEFT, TOP, RIGHT, BLACK_BOTTOM);
+    static final Region redField = new Region(LEFT, RED_TOP, RIGHT, BOTTOM);
+    static final Region wholeField = new Region(LEFT, TOP, RIGHT, BOTTOM);
+
+    // 宫的坐标
+    static final int CAMP_LEFT = 4;
+    static final int CAMP_RIGHT = 6;
+
+    static final int RED_CAMP_TOP = 3;
+    static final int RED_CAMP_BOTTOM = 1;
+
+    static final int BLACK_CAMP_TOP = 10;
+    static final int BLACK_CAMP_BOTTOM = 8;
+
+    static final Region redCamp = new Region(CAMP_LEFT, RED_CAMP_TOP, CAMP_RIGHT, RED_CAMP_BOTTOM);
+    static final Region blackCamp = new Region(CAMP_LEFT, BLACK_CAMP_TOP, CAMP_RIGHT, BLACK_CAMP_BOTTOM);
+
+    Coordinate(int x, int y) {
         this.x = x;
         this.y = y;
     }
 
     public Coordinate(Position position) {
-        x = Math.round((position.x - Position.LEFT)/Position.GAP) + 1;
-        y = Math.round((position.y - Position.TOP)/Position.GAP) + 1;
+        x = Math.round((position.x - Position.LEFT) / Position.GAP) + 1;
+        y = Math.round((position.y - Position.TOP) / Position.GAP) + 1;
     }
 
-    public static Coordinate of(int x, int y) {
-        return new Coordinate(x, y);
+    /**
+     * is the given coordinate in this faction's camp
+     * @param faction
+     * @param coord
+     * @return
+     */
+    public static boolean withinCamp(Piece.Faction faction, Coordinate coord) {
+        return (faction == Red && Coordinate.redCamp.within(coord)) ||
+               (faction == Black && Coordinate.blackCamp.within(coord));
+    }
+
+    /**
+     * is the given coord in this faction's field
+     * @param faction
+     * @param coord
+     * @return
+     */
+    public static boolean withinField(Piece.Faction faction, Coordinate coord) {
+        return (faction == Red && Coordinate.redField.within(coord)) ||
+                (faction == Black && Coordinate.blackField.within(coord));
+    }
+
+    public static boolean withinWholeField(Coordinate coord) {
+        return wholeField.within(coord);
+    }
+
+    /**
+     * is the given destination is one-by-one step away from current coordination,
+     * @param curCoord
+     * @param destination
+     * @return
+     */
+    public static boolean isOneByOneStepAway(Coordinate curCoord, Coordinate destination) {
+        return Math.abs(curCoord.x - destination.x) == 1 && Math.abs(curCoord.y - destination.y) == 1;
+    }
+
+    /**
+     * is the given destination is one step further of current coordination,
+     * @param curCoord
+     * @param destination
+     * @return
+     */
+    public static boolean isOneStepAway(Coordinate curCoord, Coordinate destination) {
+        return Math.abs(curCoord.x - destination.x) == 1 && curCoord.y == destination.y ||
+                (curCoord.x == destination.x && Math.abs(curCoord.y - destination.y) == 1);
+    }
+
+    /**
+     * is the given destination is one step backward to current coordination
+     * @param faction
+     * @param curCoord
+     * @param destination
+     * @return
+     */
+    public static boolean isOneStepBackward(Piece.Faction faction, Coordinate curCoord, Coordinate destination) {
+        return isOneStepForward(faction, destination, curCoord);
+    }
+
+    /**
+     * is the given destination is one step forward to current coordination
+     * @param faction
+     * @param curCoord
+     * @param destination
+     * @return
+     */
+    public static boolean isOneStepForward(Piece.Faction faction, Coordinate curCoord, Coordinate destination) {
+        if (faction == Red) {
+            return curCoord.x == destination.x && destination.y - curCoord.y == 1;
+        } else {
+            return curCoord.x == destination.x && curCoord.y - destination.y == 1;
+        }
+    }
+
+    /**
+     * is the given destination two-by-two left forward step away from current coordination
+     * a two-by-two left forward step is just like a 田 step
+     * ↑ ↑ ← ←
+     * @param curCoordinate
+     * @param destination
+     * @return
+     */
+    public static boolean isTwoByTwoUpLeft(Coordinate curCoordinate, Coordinate destination) {
+        return curCoordinate.x - destination.x == 2 && destination.y - curCoordinate.y == 2;
+    }
+
+    /**
+     * is the given destination two-by-two right forward step away from current coordination
+     * a two-by-two right forward step is just like a 田 step
+     * ↑ ↑ → →
+     * @param curCoordinate
+     * @param destination
+     * @return
+     */
+    public static boolean isTwoByTwoUpRight(Coordinate curCoordinate, Coordinate destination) {
+        return destination.x - curCoordinate.x == 2 && destination.y - curCoordinate.y == 2;
+    }
+
+    /**
+     * is the given destination two-by-two right backward step away from current coordination
+     * a two-by-two right backward step is just like a 田 step
+     * ↓ ↓ → →
+     * @param curCoordinate
+     * @param destination
+     * @return
+     */
+    public static boolean isTwoByTwoDownRight(Coordinate curCoordinate, Coordinate destination) {
+        return destination.x - curCoordinate.x == 2 &&  curCoordinate.y - destination.y == 2;
+    }
+
+    /**
+     * is the given destination two-by-two left backward step away from current coordination
+     * a two-by-two left backward step is just like a 田 step
+     * ↓ ↓ ← ←
+     * @param curCoordinate
+     * @param destination
+     * @return
+     */
+    public static boolean isTwoByTwoDownLeft(Coordinate curCoordinate, Coordinate destination) {
+        return curCoordinate.x - destination.x == 2 &&  curCoordinate.y - destination.y == 2;
+    }
+
+    /**
+     * is the given destination two-by-one step away from current coordination
+     * a two-by-one backward step is just like a 日 step: two step backward and one step left/right
+     *
+     * @param curCoordinate
+     * @param destination
+     * @return
+     */
+    public static boolean isTwoByOneDown(Coordinate curCoordinate, Coordinate destination) {
+        return curCoordinate.y - destination.y == 2 && Math.abs(curCoordinate.x - destination.x) == 1;
+    }
+
+    /**
+     * is the given destination two-by-one step away from current coordination
+     * a two-by-one forward step is just like a 日 step: two step forward and one step left/right
+     *
+     * @param curCoordinate
+     * @param destination
+     * @return
+     */
+    public static boolean isTwoByOneUp(Coordinate curCoordinate, Coordinate destination) {
+        return destination.y - curCoordinate.y == 2 && Math.abs(curCoordinate.x - destination.x) == 1;
+    }
+
+    /**
+     * is the given destination one-by-two left away from current coordination
+     * a one-by-two left step is just like a laid downed 日 step: one step forward/backward and two step left
+     * ⬆ ⬅ ⬅, or ⬇ ⬅ ⬅
+     * @param curCoordinate
+     * @param destination
+     * @return
+     */
+    public static boolean isOneByTwoLeft(Coordinate curCoordinate, Coordinate destination) {
+        return curCoordinate.x - destination.x == 2 && Math.abs(destination.y - curCoordinate.y) == 1;
+    }
+
+    /**
+     * is the given destination one-by-two right away from current coordination
+     * a one-by-two right step is just like a laid downed 日 step: one step forward/backward and two step right
+     * ⬆ ➡ ➡, or ⬇ ➡ ➡
+     * @param curCoordinate
+     * @param destination
+     * @return
+     */
+    public static boolean isOneByTwoRight(Coordinate curCoordinate, Coordinate destination) {
+        return destination.x - curCoordinate.x == 2 && Math.abs(destination.y - curCoordinate.y) == 1;
     }
 
     /**
@@ -63,13 +247,6 @@ public class Coordinate implements HumanFriendly {
      */
     public Coordinate horizMirroredCoord() {
         return new Coordinate(x, BLACK_BOTTOM + RED_TOP - y);
-    }
-
-    /**
-     * vertically flip the Coordinate which will be on the same faction side
-     */
-    public Coordinate vertMirroredCoord() {
-        return new Coordinate(LEFT + RIGHT - x, y);
     }
 
     @Override
@@ -99,4 +276,5 @@ public class Coordinate implements HumanFriendly {
         result = 31 * result + y;
         return result;
     }
+
 }

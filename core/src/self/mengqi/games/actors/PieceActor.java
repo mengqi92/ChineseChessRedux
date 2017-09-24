@@ -40,6 +40,7 @@ public class PieceActor extends Actor {
     public void act(float delta) {
         switch (piece.getStatus()) {
             case Died:
+                this.setVisible(false);
                 return;
             case Activated:
                 sprite = activeSprite;
