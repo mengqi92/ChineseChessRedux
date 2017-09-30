@@ -1,5 +1,6 @@
 package self.mengqi.games.models;
 
+import com.sun.istack.internal.Nullable;
 import self.mengqi.games.common.HumanFriendly;
 
 import static self.mengqi.games.enums.PieceEnums.*;
@@ -43,6 +44,9 @@ public class Coordinate implements HumanFriendly {
     public static final int BOTTOM = 1;
     public static final int RIGHT = 9;
     public static final int TOP = 10;
+
+    public static final int WIDTH = RIGHT - LEFT + 1;
+    public static final int HEIGHT = TOP - BOTTOM + 1;
 
     static final int RED_TOP = 5;       // 红方最顶行
     static final int BLACK_BOTTOM = 6;  // 黑方最底行
@@ -288,6 +292,7 @@ public class Coordinate implements HumanFriendly {
         return result;
     }
 
+    @Nullable
     public static Coordinate forward(Faction faction, Coordinate coordinate, int step) {
         int yShift = faction.getForwardDirection() * step;
         return Coordinates.of(coordinate.x, coordinate.y + yShift);

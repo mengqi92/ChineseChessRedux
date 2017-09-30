@@ -1,6 +1,6 @@
 package self.mengqi.games.models;
 
-import self.mengqi.games.common.Exceptions;
+import com.sun.istack.internal.Nullable;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,9 +29,11 @@ public enum Coordinates {
         }
     }
 
+    // TODO 改写为返回 Optional<Coordinate>
+    @Nullable
     public static Coordinate of(int x, int y) {
         if (null == indexedCoords.get(x) || null == indexedCoords.get(x).get(y)) {
-            throw new Exceptions.OutOfFieldException();
+            return null;
         }
         return indexedCoords.get(x).get(y);
     }

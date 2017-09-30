@@ -13,6 +13,16 @@ public class Tile {
         status = TileStatus.Idle;
     }
 
+    public Tile(int x, int y) {
+        this.coord = Coordinates.of(x, y);
+        status = TileStatus.Idle;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Tile%s: %s", coord, status);
+    }
+
     public TileStatus getStatus() {
         return status;
     }

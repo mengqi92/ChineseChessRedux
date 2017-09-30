@@ -1,18 +1,21 @@
 package self.mengqi.games.models;
 
+import com.sun.istack.internal.Nullable;
 import self.mengqi.games.enums.PieceEnums;
 import self.mengqi.games.piece.Piece;
 import self.mengqi.games.piece.Pieces;
 import self.mengqi.games.utils.LogUtils;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static self.mengqi.games.enums.PieceEnums.Faction.Black;
 import static self.mengqi.games.enums.PieceEnums.Faction.Red;
-import static self.mengqi.games.enums.PieceEnums.*;
+import static self.mengqi.games.enums.PieceEnums.Status;
+import static self.mengqi.games.enums.PieceEnums.Type;
+import static self.mengqi.games.enums.PieceEnums.Type.*;
+import static self.mengqi.games.models.Tile.TileStatus.Eatable;
+import static self.mengqi.games.models.Tile.TileStatus.Idle;
+import static self.mengqi.games.models.Tile.TileStatus.Movable;
 
 /**
  * Created by Mengqi on 2017/9/16.
@@ -21,13 +24,33 @@ import static self.mengqi.games.enums.PieceEnums.*;
  */
 public class Board {
     private static Board board;
+    private static HashMap<Type, List<Coordinate>> initialPieceCoord = new HashMap<>();
+
+    static {
+        initialPieceCoord.put(Zu, Arrays.asList(
+                Coordinates.of(1, 4),
+                Coordinates.of(3, 4),
+                Coordinates.of(5, 4),
+                Coordinates.of(7, 4),
+                Coordinates.of(9, 4)
+        ));
+        initialPieceCoord.put(Pao, Arrays.asList(Coordinates.of(2, 3), Coordinates.of(8, 3)));
+
+        initialPieceCoord.put(Ju, Arrays.asList(Coordinates.of(1, 1), Coordinates.of(9, 1)));
+        initialPieceCoord.put(Ma, Arrays.asList(Coordinates.of(2, 1), Coordinates.of(8, 1)));
+        initialPieceCoord.put(Xiang, Arrays.asList(Coordinates.of(3, 1), Coordinates.of(7, 1)));
+        initialPieceCoord.put(Shi, Arrays.asList(Coordinates.of(4, 1), Coordinates.of(6, 1)));
+        initialPieceCoord.put(Jiang, Arrays.asList(Coordinates.of(5, 1)));
+    }
 
     private List<Piece> pieces = new ArrayList<>();
     private List<Tile> tiles = new ArrayList<>();
     // 指向当前棋盘上已激活的棋子
-    private Piece activatedPiece;
+    private Piece activatedPiece = null;
     // 记录 坐标->棋子 的映射关系，需要在棋子走动时更新
     private HashMap<Coordinate, Piece> coordToPiece = new HashMap<>();
+    // 记录 坐标->Tile 的映射关系
+    private HashMap<Coordinate, Tile> coordToTile = new HashMap<>();
 
     private Piece blackJiang;
     private Piece redJiang;
@@ -47,12 +70,15 @@ public class Board {
 
     private void initTiles() {
         for (Coordinate coord : Coordinates.getCoordList()) {
-            tiles.add(new Tile(coord));
+            Optional<Tile> tile = Tiles.of(coord);
+            if (tile.isPresent()) {
+                tiles.add(tile.get());
+                coordToTile.put(coord, tile.get());
+            }
         }
     }
 
     private void initPieces() {
-        Map<Type, List<Coordinate>> initialPieceCoord = new HashMap<>();
 
         for (Map.Entry<Type, List<Coordinate>> entrySet : initialPieceCoord.entrySet()) {
             for (Coordinate coordinate : entrySet.getValue()) {
@@ -60,16 +86,20 @@ public class Board {
                 Piece redPiece = Pieces.of(entrySet.getKey(), Red, coordinate);
                 pieces.add(redPiece);
                 if (redPiece != null) {
+                    redPiece.updateMovableArea(this);
+                    redPiece.updateEatableArea(this);
                     coordToPiece.put(redPiece.getCoordinate(), redPiece);
                 }
 
                 Piece blackPiece = Pieces.of(entrySet.getKey(), Black, coordinate.horizMirroredCoord());
                 pieces.add(blackPiece);
                 if (blackPiece != null) {
+                    blackPiece.updateMovableArea(this);
+                    blackPiece.updateEatableArea(this);
                     coordToPiece.put(blackPiece.getCoordinate(), blackPiece);
                 }
 
-                if (Type.Jiang == type) {
+                if (Jiang == type) {
                     redJiang = redPiece;
                     blackJiang = blackPiece;
                 }
@@ -95,7 +125,7 @@ public class Board {
         } else {  // 点击的位置没有棋子
             if (this.hasPieceActivated()) {
                 if (Coordinate.wholeField.within(targetCoord)) {
-                    this.activatedPiece.tryToMove(targetCoord);
+                    tryToMove(targetCoord);
                 }
             }
         }
@@ -120,6 +150,19 @@ public class Board {
     }
 
     /**
+     * try to move to destination
+     * @param destination
+     */
+    private void tryToMove(Coordinate destination) {
+        Coordinate original = activatedPiece.getCoordinate();
+        if (this.activatedPiece.tryToMove(this, destination)) {
+            this.coordToPiece.remove(original);
+            this.coordToPiece.put(destination, activatedPiece);
+            updateTiles(activatedPiece);
+        }
+    }
+
+    /**
      * try to eat another piece
      *
      * @param targetPiece the target piece on another faction
@@ -127,12 +170,29 @@ public class Board {
     private void tryToEat(Piece targetPiece) {
         Coordinate destination = targetPiece.getCoordinate();
 
-        if (activatedPiece.tryToEat(destination)) {
+        if (activatedPiece.tryToEat(this, destination)) {
             LogUtils.debugging("board", activatedPiece, "ate", targetPiece);
-
             letItDie(targetPiece);
+            this.coordToPiece.put(destination, activatedPiece);
+            updateTiles(activatedPiece);
         } else {
             LogUtils.debugging("board", activatedPiece, "cannot eat", targetPiece);
+        }
+    }
+
+    /**
+     * update tiles' status based on movable and eatable area of the piece
+     * @param piece
+     */
+    private void updateTiles(Piece piece) {
+        tiles.forEach(tile -> tile.setStatus(Idle));
+        for (Coordinate coord : piece.getMovableArea()) {
+            Tile tile = coordToTile.get(coord);
+            tile.setStatus(Movable);
+        }
+        for (Coordinate coord : piece.getEatableArea()) {
+            Tile tile = coordToTile.get(coord);
+            tile.setStatus(Eatable);
         }
     }
 
@@ -151,16 +211,15 @@ public class Board {
             targetPiece.toggleActivated();
             activatedPiece = targetPiece;
         }
-        activatedPiece.updateMovableArea(this);
-        activatedPiece.updateEatableArea(this);
     }
 
+    @Nullable
     public Coordinate getJiangCoord(PieceEnums.Faction faction) {
         switch (faction) {
             case Black:
-                return blackJiang.getCoordinate();
+                return (null != blackJiang) ? blackJiang.getCoordinate() : null;
             case Red:
-                return redJiang.getCoordinate();
+                return (null != redJiang) ? redJiang.getCoordinate() : null;
         }
         throw new IllegalStateException("阵营不支持");
     }
@@ -174,7 +233,7 @@ public class Board {
     }
 
     public boolean hasPieceOn(int x, int y) {
-        return coordToPiece.get(Coordinates.of(x, y)) != null;
+        return coordToPiece.containsKey(Coordinates.of(x, y));
     }
 
     public boolean hasPieceOn(Coordinate destination) {
@@ -188,5 +247,16 @@ public class Board {
 
     public List<Tile> getTiles() {
         return tiles;
+    }
+
+    /**
+     * is the piece on the coord in same side
+     * @param faction
+     * @param coord
+     * @return true if the piece is our friend
+     */
+    public boolean hasFriendPieceOn(PieceEnums.Faction faction, Coordinate coord) {
+        return coordToPiece.containsKey(coord) &&
+                faction != coordToPiece.get(coord).getFaction().enemy();
     }
 }
