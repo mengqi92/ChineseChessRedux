@@ -1,11 +1,11 @@
 package self.mengqi.games.models;
 
-import java.util.HashMap;
+import self.mengqi.games.common.Exceptions;
 
-import static self.mengqi.games.models.Coordinate.BOTTOM;
-import static self.mengqi.games.models.Coordinate.LEFT;
-import static self.mengqi.games.models.Coordinate.RIGHT;
-import static self.mengqi.games.models.Coordinate.TOP;
+import java.util.HashMap;
+import java.util.LinkedList;
+
+import static self.mengqi.games.models.Coordinate.*;
 
 /**
  * Created by Mengqi on 2017/9/24.
@@ -14,19 +14,29 @@ import static self.mengqi.games.models.Coordinate.TOP;
 public enum Coordinates {
     INSTANCE;
 
-    static HashMap<Integer, HashMap<Integer, Coordinate>> coordinates = new HashMap<>();
+    static HashMap<Integer, HashMap<Integer, Coordinate>> indexedCoords = new HashMap<>();
+    static LinkedList<Coordinate> coordList = new LinkedList<>();
 
     static {
         for (int x = LEFT; x <= RIGHT; x++) {
             HashMap<Integer, Coordinate> rowToCoord = new HashMap<>();
             for (int y = BOTTOM; y <= TOP; y++) {
-                rowToCoord.put(y, new Coordinate(x, y));
+                Coordinate coord = new Coordinate(x, y);
+                rowToCoord.put(y, coord);
+                coordList.add(coord);
             }
-            coordinates.put(x, rowToCoord);
+            indexedCoords.put(x, rowToCoord);
         }
     }
 
-    static Coordinate of(int x, int y) {
-        return coordinates.get(x).get(y);
+    public static Coordinate of(int x, int y) {
+        if (null == indexedCoords.get(x) || null == indexedCoords.get(x).get(y)) {
+            throw new Exceptions.OutOfFieldException();
+        }
+        return indexedCoords.get(x).get(y);
+    }
+
+    public static LinkedList<Coordinate> getCoordList() {
+        return coordList;
     }
 }

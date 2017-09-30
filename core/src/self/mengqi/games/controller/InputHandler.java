@@ -26,11 +26,9 @@ public class InputHandler extends InputAdapter implements InputProcessor {
         Position targetPosition = new Position(camera.unproject(new Vector3(screenX, screenY, 0)));
         Coordinate targetCoord = new Coordinate(targetPosition);
 
-//        LogUtils.debugging("input", "position", targetPosition);
         LogUtils.debugging("input", "coordinate", targetCoord);
 
         board.makeDecision(targetCoord);
-
         return true;
     }
 }

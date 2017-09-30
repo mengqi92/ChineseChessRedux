@@ -2,8 +2,9 @@ package self.mengqi.games.models;
 
 import self.mengqi.games.common.HumanFriendly;
 
-import static self.mengqi.games.models.Piece.Faction.Black;
-import static self.mengqi.games.models.Piece.Faction.Red;
+import static self.mengqi.games.enums.PieceEnums.*;
+import static self.mengqi.games.enums.PieceEnums.Faction.Black;
+import static self.mengqi.games.enums.PieceEnums.Faction.Red;
 
 /**
 * Created by Mengqi on 2017/9/16.
@@ -35,20 +36,20 @@ import static self.mengqi.games.models.Piece.Faction.Red;
   (1, 1)      (4, 1)  (6, 1)       (9, 1)       // Coordinate
 */
 public class Coordinate implements HumanFriendly {
-    int x;
-    int y;
+    public int x;
+    public int y;
 
-    static final int LEFT = 1;
-    static final int BOTTOM = 1;
-    static final int RIGHT = 9;
-    static final int TOP = 10;
+    public static final int LEFT = 1;
+    public static final int BOTTOM = 1;
+    public static final int RIGHT = 9;
+    public static final int TOP = 10;
 
     static final int RED_TOP = 5;       // 红方最顶行
     static final int BLACK_BOTTOM = 6;  // 黑方最底行
 
-    static final Region blackField = new Region(LEFT, TOP, RIGHT, BLACK_BOTTOM);
-    static final Region redField = new Region(LEFT, RED_TOP, RIGHT, BOTTOM);
-    static final Region wholeField = new Region(LEFT, TOP, RIGHT, BOTTOM);
+    public static final Region blackField = new Region(LEFT, TOP, RIGHT, BLACK_BOTTOM);
+    public static final Region redField = new Region(LEFT, RED_TOP, RIGHT, BOTTOM);
+    public static final Region wholeField = new Region(LEFT, TOP, RIGHT, BOTTOM);
 
     // 宫的坐标
     static final int CAMP_LEFT = 4;
@@ -74,12 +75,21 @@ public class Coordinate implements HumanFriendly {
     }
 
     /**
+     * 判断该阵营的朝向是否向上走
+     * @param faction
+     * @return 当该阵营是朝上走时返回 1，否则返回 -1
+     */
+    public static int facingUp(Faction faction) {
+        return faction == Red ? 1 : -1;
+    }
+
+    /**
      * is the given coordinate in this faction's camp
      * @param faction
      * @param coord
      * @return
      */
-    public static boolean withinCamp(Piece.Faction faction, Coordinate coord) {
+    public static boolean withinCamp(Faction faction, Coordinate coord) {
         return (faction == Red && Coordinate.redCamp.within(coord)) ||
                (faction == Black && Coordinate.blackCamp.within(coord));
     }
@@ -90,11 +100,16 @@ public class Coordinate implements HumanFriendly {
      * @param coord
      * @return
      */
-    public static boolean withinField(Piece.Faction faction, Coordinate coord) {
+    public static boolean withinField(Faction faction, Coordinate coord) {
         return (faction == Red && Coordinate.redField.within(coord)) ||
                 (faction == Black && Coordinate.blackField.within(coord));
     }
 
+    /**
+     * is the coordinate in the valid area of the board
+     * @param coord
+     * @return
+     */
     public static boolean withinWholeField(Coordinate coord) {
         return wholeField.within(coord);
     }
@@ -127,7 +142,7 @@ public class Coordinate implements HumanFriendly {
      * @param destination
      * @return
      */
-    public static boolean isOneStepBackward(Piece.Faction faction, Coordinate curCoord, Coordinate destination) {
+    public static boolean isOneStepBackward(Faction faction, Coordinate curCoord, Coordinate destination) {
         return isOneStepForward(faction, destination, curCoord);
     }
 
@@ -138,12 +153,8 @@ public class Coordinate implements HumanFriendly {
      * @param destination
      * @return
      */
-    public static boolean isOneStepForward(Piece.Faction faction, Coordinate curCoord, Coordinate destination) {
-        if (faction == Red) {
-            return curCoord.x == destination.x && destination.y - curCoord.y == 1;
-        } else {
-            return curCoord.x == destination.x && curCoord.y - destination.y == 1;
-        }
+    public static boolean isOneStepForward(Faction faction, Coordinate curCoord, Coordinate destination) {
+        return curCoord.x == destination.x && (facingUp(faction) * (destination.y - curCoord.y) == 1);
     }
 
     /**
@@ -277,4 +288,41 @@ public class Coordinate implements HumanFriendly {
         return result;
     }
 
+    public static Coordinate forward(Faction faction, Coordinate coordinate, int step) {
+        int yShift = faction.getForwardDirection() * step;
+        return Coordinates.of(coordinate.x, coordinate.y + yShift);
+    }
+
+    /**
+     * 用于表示横、纵坐标轴
+     */
+    public enum Axis {
+        X, Y;
+    }
+
+    /**
+     * 用于表示方向，可表示 横5纵2: x=5, y=2
+     */
+    public class Direction {
+        int x;
+        int y;
+    }
+
+    private enum DirectionXAxis {
+        Right(1), Left(-1);
+        private int factor;
+
+        DirectionXAxis(int factor) {
+            this.factor = factor;
+        }
+    }
+
+    private enum DirectionYAxis {
+        Up(1), Down(-1);
+        private int factor;
+
+        DirectionYAxis(int factor) {
+            this.factor = factor;
+        }
+    }
 }

@@ -6,8 +6,8 @@ import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
-import self.mengqi.games.models.Piece;
 import self.mengqi.games.models.Position;
+import self.mengqi.games.piece.Piece;
 
 /**
  * Created by Mengqi on 2017/9/14.
@@ -21,7 +21,7 @@ public class PieceActor extends Actor {
     private Sprite idleSprite;
 
     public PieceActor(Piece piece) {
-        this.setName(piece.getDisplayName());
+        this.setName(piece.toReadableString());
         this.piece = piece;
         this.position = new Position(piece.getCoordinate());
 
@@ -34,6 +34,7 @@ public class PieceActor extends Actor {
                 String.format("pieces/idle/%s_%s.gif",
                         this.piece.getFaction().getCode(),
                         this.piece.getType().getCode()))));
+        this.setZIndex(2);
     }
 
     @Override
@@ -50,8 +51,8 @@ public class PieceActor extends Actor {
                 break;
         }
 
-        Position piecePosition = new Position(piece.getCoordinate());
-        sprite.setCenter(piecePosition.x, piecePosition.y);
+        this.position = new Position(piece.getCoordinate());
+        sprite.setCenter(position.x, position.y);
 
         setBounds(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
         setTouchable(Touchable.enabled);

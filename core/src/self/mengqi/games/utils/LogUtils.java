@@ -24,7 +24,7 @@ public class LogUtils {
         Gdx.app.debug(tag, String.format("%s: %s", field, object.toReadableString()));
     }
 
-    public static void debugging(String tag, HumanFriendly object1, String interact, HumanFriendly object2) {
-        Gdx.app.debug(tag, String.format("%s %s %s", object1.toReadableString(), interact, object2.toReadableString()));
+    public static void debugging(String tag, HumanFriendly object1, String action, HumanFriendly object2) {
+        Gdx.app.debug(tag, String.format("%s %s %s", object1.toReadableString(), action, object2.toReadableString()));
     }
 }

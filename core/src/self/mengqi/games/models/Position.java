@@ -15,13 +15,13 @@ public class Position implements HumanFriendly {
     public float z;
 
     static final int GRIDS = 8; // how many GRIDS are on the board
-    static final int GAP = 60;  // GAP between two adjacent line
-    static final int HALF_GAP = GAP /2;
+    public static final int GAP = 60;  // GAP between two adjacent line
+    public static final int HALF_GAP = GAP /2;
 
     static final int TOP = 50;
     static final int LEFT = 47;
     static final int BOTTOM = TOP + GRIDS * GAP;
-    public static final int RIGHT = LEFT + GRIDS * GAP;
+    static final int RIGHT = LEFT + GRIDS * GAP;
 
     static final int BLACK_BOTTOM = TOP + (GRIDS /2) * GAP;  // 黑方下界
     static final int RED_TOP = BLACK_BOTTOM + GAP;           // 红方上界

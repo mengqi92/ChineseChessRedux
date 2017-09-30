@@ -5,14 +5,18 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import self.mengqi.games.actors.BoardActor;
 import self.mengqi.games.actors.PieceActor;
+import self.mengqi.games.actors.TileActor;
 import self.mengqi.games.controller.InputHandler;
 import self.mengqi.games.models.Board;
-import self.mengqi.games.models.Piece;
+import self.mengqi.games.models.Tile;
+import self.mengqi.games.piece.Piece;
 
 public class ChineseChess extends ApplicationAdapter {
 
@@ -24,6 +28,9 @@ public class ChineseChess extends ApplicationAdapter {
 	public void create () {
 	    Gdx.app.setLogLevel(Application.LOG_DEBUG);
         OrthographicCamera camera = new OrthographicCamera(Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+        ShapeRenderer shapeRenderer = new ShapeRenderer();
+        shapeRenderer.setProjectionMatrix(camera.combined);
+
 	    stage = new Stage(new ScreenViewport(camera));
 	    board = Board.create();
 
@@ -31,11 +38,17 @@ public class ChineseChess extends ApplicationAdapter {
 	    table.setFillParent(true);
 	    table.setDebug(true);
 
-	    stage.addActor(table);
-        stage.addActor(new BoardActor());
+	    Group group = new Group();
+
+	    group.addActor(table);
+        group.addActor(new BoardActor(board));
+		for (Tile tile : board.getTiles()) {
+			group.addActor(new TileActor(tile));
+		}
         for (Piece piece : board.getPieces()) {
-            stage.addActor(new PieceActor(piece));
+            group.addActor(new PieceActor(piece));
         }
+        stage.addActor(group);
 
 	    Gdx.input.setInputProcessor(new InputHandler(camera));
 	}

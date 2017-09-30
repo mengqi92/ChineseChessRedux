@@ -1,12 +1,18 @@
 package self.mengqi.games.models;
 
+import self.mengqi.games.enums.PieceEnums;
+import self.mengqi.games.piece.Piece;
+import self.mengqi.games.piece.Pieces;
 import self.mengqi.games.utils.LogUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static self.mengqi.games.models.Piece.Faction.Black;
-import static self.mengqi.games.models.Piece.Faction.Red;
-import static self.mengqi.games.models.Piece.Type.*;
+import static self.mengqi.games.enums.PieceEnums.Faction.Black;
+import static self.mengqi.games.enums.PieceEnums.Faction.Red;
+import static self.mengqi.games.enums.PieceEnums.*;
 
 /**
  * Created by Mengqi on 2017/9/16.
@@ -15,54 +21,58 @@ import static self.mengqi.games.models.Piece.Type.*;
  */
 public class Board {
     private static Board board;
-    private static HashMap<Piece.Type, List<Coordinate>> initialPieceCoord = new HashMap<>();
-
-    static {
-        initialPieceCoord.put(Zu, Arrays.asList(
-                Coordinates.of(1, 4),
-                Coordinates.of(3, 4),
-                Coordinates.of(5, 4),
-                Coordinates.of(7, 4),
-                Coordinates.of(9, 4)
-        ));
-        initialPieceCoord.put(Pao, Arrays.asList(Coordinates.of(2, 3), Coordinates.of(8, 3)));
-
-        initialPieceCoord.put(Ju, Arrays.asList(Coordinates.of(1, 1), Coordinates.of(9, 1)));
-        initialPieceCoord.put(Ma, Arrays.asList(Coordinates.of(2, 1), Coordinates.of(8, 1)));
-        initialPieceCoord.put(Xiang, Arrays.asList(Coordinates.of(3, 1), Coordinates.of(7, 1)));
-        initialPieceCoord.put(Shi, Arrays.asList(Coordinates.of(4, 1), Coordinates.of(6, 1)));
-        initialPieceCoord.put(Jiang, Arrays.asList(Coordinates.of(5, 1)));
-    }
 
     private List<Piece> pieces = new ArrayList<>();
+    private List<Tile> tiles = new ArrayList<>();
     // 指向当前棋盘上已激活的棋子
     private Piece activatedPiece;
     // 记录 坐标->棋子 的映射关系，需要在棋子走动时更新
     private HashMap<Coordinate, Piece> coordToPiece = new HashMap<>();
 
-    private Board() {
-    }
+    private Piece blackJiang;
+    private Piece redJiang;
+
+    private Board() {}
 
     public static Board create() {
         if (null != board) {
             return board;
         } else {
             board = new Board();
+            board.initTiles();
             board.initPieces();
         }
         return board;
     }
 
-    private void initPieces() {
-        for (Map.Entry<Piece.Type, List<Coordinate>> entrySet : initialPieceCoord.entrySet()) {
-            for (Coordinate coordinate : entrySet.getValue()) {
-                Piece redPiece = new Piece(entrySet.getKey(), Red, coordinate);
-                pieces.add(redPiece);
-                coordToPiece.put(redPiece.getCoordinate(), redPiece);
+    private void initTiles() {
+        for (Coordinate coord : Coordinates.getCoordList()) {
+            tiles.add(new Tile(coord));
+        }
+    }
 
-                Piece blackPiece = new Piece(entrySet.getKey(), Black, coordinate.horizMirroredCoord());
+    private void initPieces() {
+        Map<Type, List<Coordinate>> initialPieceCoord = new HashMap<>();
+
+        for (Map.Entry<Type, List<Coordinate>> entrySet : initialPieceCoord.entrySet()) {
+            for (Coordinate coordinate : entrySet.getValue()) {
+                Type type = entrySet.getKey();
+                Piece redPiece = Pieces.of(entrySet.getKey(), Red, coordinate);
+                pieces.add(redPiece);
+                if (redPiece != null) {
+                    coordToPiece.put(redPiece.getCoordinate(), redPiece);
+                }
+
+                Piece blackPiece = Pieces.of(entrySet.getKey(), Black, coordinate.horizMirroredCoord());
                 pieces.add(blackPiece);
-                coordToPiece.put(blackPiece.getCoordinate(), blackPiece);
+                if (blackPiece != null) {
+                    coordToPiece.put(blackPiece.getCoordinate(), blackPiece);
+                }
+
+                if (Type.Jiang == type) {
+                    redJiang = redPiece;
+                    blackJiang = blackPiece;
+                }
             }
         }
     }
@@ -85,7 +95,7 @@ public class Board {
         } else {  // 点击的位置没有棋子
             if (this.hasPieceActivated()) {
                 if (Coordinate.wholeField.within(targetCoord)) {
-                    this.tryToMove(targetCoord);
+                    this.activatedPiece.tryToMove(targetCoord);
                 }
             }
         }
@@ -117,42 +127,42 @@ public class Board {
     private void tryToEat(Piece targetPiece) {
         Coordinate destination = targetPiece.getCoordinate();
 
-        if (Rules.canEat(activatedPiece, destination)) {
-            LogUtils.debugging("board", activatedPiece, "can eat: ", targetPiece);
+        if (activatedPiece.tryToEat(destination)) {
+            LogUtils.debugging("board", activatedPiece, "ate", targetPiece);
 
             letItDie(targetPiece);
-            letItMove(activatedPiece, destination);
         } else {
-            LogUtils.debugging("board", activatedPiece, "cannot eat to: ", targetPiece);
+            LogUtils.debugging("board", activatedPiece, "cannot eat", targetPiece);
         }
     }
 
     /**
-     * tryToMove the activated piece to destination
-     *
-     * @param destination
+     * toggle the status of the activated piece
+     * @param targetPiece
      */
-    public void tryToMove(Coordinate destination) {
-        if (Rules.canMoveTo(activatedPiece, destination)) {
-            LogUtils.debugging("board", activatedPiece, "can move to: ", destination);
-
-            letItMove(activatedPiece, destination);
-        } else {
-            LogUtils.debugging("board", activatedPiece, "cannot move to: ", destination);
-        }
-    }
-
     public void toggleActivatePiece(Piece targetPiece) {
         if (activatedPiece != null && activatedPiece != targetPiece) {
             activatedPiece.toggleActivated();
         }
-        if (targetPiece.getStatus() == Piece.Status.Activated) {
+        if (targetPiece.getStatus() == Status.Activated) {
             targetPiece.toggleActivated();
             activatedPiece = null;
-        } else if (targetPiece.getStatus() == Piece.Status.Idle) {
+        } else if (targetPiece.getStatus() == Status.Idle) {
             targetPiece.toggleActivated();
             activatedPiece = targetPiece;
         }
+        activatedPiece.updateMovableArea(this);
+        activatedPiece.updateEatableArea(this);
+    }
+
+    public Coordinate getJiangCoord(PieceEnums.Faction faction) {
+        switch (faction) {
+            case Black:
+                return blackJiang.getCoordinate();
+            case Red:
+                return redJiang.getCoordinate();
+        }
+        throw new IllegalStateException("阵营不支持");
     }
 
     public boolean hasPieceActivated() {
@@ -171,57 +181,12 @@ public class Board {
         return hasPieceOn(destination.x, destination.y);
     }
 
-    /**
-     * if there are pieces on the board column x, and y is between from and to, then return true
-     *
-     * @param x    column of the board (1-indexed)
-     * @param from
-     * @param to
-     * @return
-     */
-    public int piecesOnTheColumnBetween(int x, int from, int to) {
-        if (from == to) return 0;
-
-        int smaller = Math.min(from, to);
-        int bigger = smaller == to ? from : to;
-
-        int pieceCount = 0;
-        for (int yi = smaller + 1; yi < bigger; yi++) {
-            if (board.hasPieceOn(x, yi)) pieceCount++;
-        }
-
-        return pieceCount;
-    }
-
-    /**
-     * if there are pieces on the board row y, and x is between from and to, then return true
-     *
-     * @param y    row of the board (1-indexed)
-     * @param from
-     * @param to
-     * @return number of pieces between from and to
-     */
-    public int piecesOnTheRowBetween(int y, int from, int to) {
-        if (from == to) return 0;
-
-        int smaller = Math.min(from, to);
-        int bigger = smaller == to ? from : to;
-
-        int pieceCount = 0;
-        for (int xi = smaller + 1; xi < bigger; xi++) {
-            if (board.hasPieceOn(xi, y)) pieceCount++;
-        }
-        return pieceCount;
-    }
-
     private void letItDie(Piece targetPiece) {
-        targetPiece.setStatus(Piece.Status.Died);
+        targetPiece.setStatus(Status.Died);
         coordToPiece.remove(targetPiece.getCoordinate());
     }
 
-    private void letItMove(Piece piece, Coordinate destination) {
-        coordToPiece.remove(piece.getCoordinate());
-        coordToPiece.put(destination, piece);
-        piece.move(destination);
+    public List<Tile> getTiles() {
+        return tiles;
     }
 }
