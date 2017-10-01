@@ -1,10 +1,12 @@
 package self.mengqi.games.models;
 
+import self.mengqi.games.common.HumanFriendly;
+
 /**
  * Created by Mengqi on 2017/9/24.
  * 棋盘上的方格
  */
-public class Tile {
+public class Tile implements HumanFriendly {
     private Coordinate coord;
     private TileStatus status;
 
@@ -33,6 +35,11 @@ public class Tile {
 
     public Coordinate getCoordinate() {
         return coord;
+    }
+
+    @Override
+    public String toReadableString() {
+        return String.format("Tile@%s: %s", coord, status);
     }
 
     public enum TileStatus {

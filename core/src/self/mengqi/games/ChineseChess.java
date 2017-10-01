@@ -41,12 +41,13 @@ public class ChineseChess extends ApplicationAdapter {
 	    Group group = new Group();
 
 	    group.addActor(table);
-        group.addActor(new BoardActor(board));
+		BoardActor boardActor = new BoardActor(board);
+		group.addActor(boardActor);
 		for (Tile tile : board.getTiles()) {
 			group.addActor(new TileActor(tile));
 		}
         for (Piece piece : board.getPieces()) {
-            group.addActor(new PieceActor(piece));
+			group.addActor(new PieceActor(piece));
         }
         stage.addActor(group);
 

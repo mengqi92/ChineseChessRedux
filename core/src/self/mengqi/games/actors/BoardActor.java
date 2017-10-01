@@ -22,7 +22,6 @@ public class BoardActor extends Actor {
 
         setBounds(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
         setTouchable(Touchable.enabled);
-        this.setZIndex(1);
     }
 
     @Override

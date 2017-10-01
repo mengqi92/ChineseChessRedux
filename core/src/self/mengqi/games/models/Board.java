@@ -69,6 +69,9 @@ public class Board {
         return board;
     }
 
+    /**
+     * 初始化所有 tile 状态
+     */
     private void initTiles() {
         for (Coordinate coord : Coordinates.getCoordList()) {
             Optional<Tile> tile = Tiles.of(coord);
@@ -79,8 +82,10 @@ public class Board {
         }
     }
 
+    /**
+     * 初始化所有棋子，并将其订阅至该棋盘
+     */
     private void initPieces() {
-
         for (Map.Entry<Type, List<Coordinate>> entrySet : initialPieceCoord.entrySet()) {
             for (Coordinate coordinate : entrySet.getValue()) {
                 Type type = entrySet.getKey();
@@ -104,6 +109,9 @@ public class Board {
         }
     }
 
+    /**
+     * 向所有棋子发布更新通知
+     */
     private void updateAllPieces() {
         for (Piece piece : this.pieces) {
             piece.updateAreas(this);
@@ -207,6 +215,7 @@ public class Board {
                 tile.setStatus(Eatable);
             }
         }
+        tiles.forEach(System.out::println);
     }
 
     /**

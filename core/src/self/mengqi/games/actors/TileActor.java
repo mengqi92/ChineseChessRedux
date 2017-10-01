@@ -1,7 +1,6 @@
 package self.mengqi.games.actors;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.Sprite;
@@ -9,7 +8,6 @@ import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
 import self.mengqi.games.models.Position;
 import self.mengqi.games.models.Tile;
-import self.mengqi.games.utils.LogUtils;
 
 /**
  * Created by Mengqi on 2017/9/24.
@@ -27,32 +25,31 @@ public class TileActor extends Actor {
         position = new Position(tile.getCoordinate());
         sprite.setCenter(position.x, position.y);
         setTouchable(Touchable.disabled);
-        this.setZIndex(2);
     }
 
     @Override
     public void act(float delta) {
         switch (tile.getStatus()) {
             case Idle:
-//                this.setVisible(false);
-//                this.setColor(255, 255, 0, 0.1f);
+                this.setVisible(false);
                 break;
             case Movable:
-                LogUtils.debugging("tile", "actor", "movable");
                 this.setVisible(true);
-                sprite.setColor(255, 0, 0, 0.5f);
+//                sprite.setColor(0.793f, 0.849f, 0.383f, 0.7f);
+//                sprite.setColor(0.899f, 0.835f, 0.405f, 0.7f);
+                sprite.setColor(1f, 1f, 1f, 0.3f);
                 break;
             case Eatable:
                 this.setVisible(true);
-                sprite.setColor(0, 0, 255, 0.5f);
+                sprite.setColor(0.849f, 0.439f, 0.383f, 0.9f);
                 break;
         }
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        Color color = sprite.getColor();
-        batch.setColor(color.r, color.g, color.b, color.a * parentAlpha);
-        batch.draw(sprite, sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
+        if (!isVisible())
+            return;
+        sprite.draw(batch, parentAlpha);
     }
 }

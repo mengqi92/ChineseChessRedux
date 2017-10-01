@@ -34,7 +34,6 @@ public class PieceActor extends Actor {
                 String.format("pieces/idle/%s_%s.gif",
                         this.piece.getFaction().getCode(),
                         this.piece.getType().getCode()))));
-        this.setZIndex(2);
     }
 
     @Override
@@ -60,7 +59,7 @@ public class PieceActor extends Actor {
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        batch.draw(sprite, sprite.getX(), sprite.getY());
+        sprite.draw(batch, parentAlpha);
     }
 
     @Override
