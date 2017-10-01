@@ -33,7 +33,7 @@ public class Zu extends AbstractPiece {
                     Coordinates.of(coordinate.x+1, coordinate.y))
                     .filter(Objects::nonNull)
                     .filter(Coordinate::withinWholeField)
-                    .filter(coord -> !board.hasFriendPieceOn(this.faction, coord))
+                    .filter(coord -> !board.hasEnemyPieceOn(this.faction, coord))
                     .collect(Collectors.toSet());
         }
     }
