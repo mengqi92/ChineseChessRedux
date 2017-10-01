@@ -28,15 +28,13 @@ public class Jiang extends AbstractPiece {
             return;
         // 双方老将面对面，也可以吃
         if (enemyCoord.x == coordinate.x) {
-            for (int yi = Math.min(enemyCoord.y, coordinate.y);
-                 yi < Math.max(enemyCoord.y, coordinate.y);
-                 yi += faction.getForwardDirection()) {
+            for (int yi = Math.min(enemyCoord.y, coordinate.y) + 1; yi < Math.max(enemyCoord.y, coordinate.y); yi++) {
                 if (board.hasPieceOn(coordinate.x, yi)) {
                     return;
                 }
             }
+            this.eatableArea.add(enemyCoord);
         }
-        this.eatableArea.add(enemyCoord);
     }
 
     @Override

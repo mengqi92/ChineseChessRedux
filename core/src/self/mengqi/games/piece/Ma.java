@@ -24,11 +24,12 @@ public class Ma extends AbstractPiece {
                 {2, -1}, {2, 1}, {-2, 1}, {-2, -1},
                 {1, 2}, {1, -2}, {-1, 2}, {-1, -2},
         };
-        this.eatableArea = Arrays.stream(candidates)
+        eatableArea = Arrays.stream(candidates)
                 .map(xy -> Coordinates.of(coordinate.x+xy[0], coordinate.y+xy[1]))
                 .filter(Objects::nonNull)
                 .filter(Coordinate::withinWholeField)
-                .filter(coord -> !board.hasFriendPieceOn(this.faction, coord))
+                .filter(coord -> board.hasEnemyPieceOn(this.faction, coord))
+                .filter(coord -> !board.hasPieceOn(maLeg(coord)))  // 判断是否马腿上有子
                 .collect(Collectors.toSet());
     }
 
@@ -38,11 +39,29 @@ public class Ma extends AbstractPiece {
                 {2, -1}, {2, 1}, {-2, 1}, {-2, -1},
                 {1, 2}, {1, -2}, {-1, 2}, {-1, -2},
         };
-        this.movableArea = Arrays.stream(candidates)
+        movableArea = Arrays.stream(candidates)
                 .map(xy -> Coordinates.of(coordinate.x+xy[0], coordinate.y+xy[1]))
                 .filter(Objects::nonNull)
                 .filter(Coordinate::withinWholeField)
                 .filter(coord -> !board.hasPieceOn(coord))
+                .filter(coord -> !board.hasPieceOn(maLeg(coord)))  // 判断是否马腿上有子
                 .collect(Collectors.toSet());
     }
+
+    /**
+     * 根据当前马的位置和目标地点，计算出马腿的位置
+     * @param destination
+     * @return
+     */
+    private Coordinate maLeg(final Coordinate destination) {
+        if (Math.abs(coordinate.x - destination.x) == 1 && Math.abs(coordinate.y - destination.y) == 2) {
+            return Coordinates.of(coordinate.x, (coordinate.y + destination.y) >> 1);
+        } else if (Math.abs(coordinate.x - destination.x) == 2 &&
+                Math.abs(coordinate.y - destination.y) == 1) {
+            return Coordinates.of((coordinate.x + destination.x) >> 1, coordinate.y);
+        } else {
+            throw new IllegalStateException("马吃不到这个子" + destination.toString());
+        }
+    }
+
 }

@@ -5,10 +5,7 @@ import self.mengqi.games.models.Board;
 import self.mengqi.games.models.Coordinate;
 import self.mengqi.games.models.Coordinates;
 
-import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.HashSet;
 
 /**
  * Created by Mengqi on 2017/9/27.
@@ -22,43 +19,95 @@ public class Ju extends AbstractPiece {
 
     @Override
     public void updateEatableArea(Board board) {
-        IntStream xRightward = IntStream.rangeClosed(coordinate.x, Coordinate.RIGHT);
-        IntStream xLeftward = IntStream.rangeClosed(Coordinate.LEFT, coordinate.x);
-        IntStream yUpward = IntStream.rangeClosed(coordinate.y, Coordinate.TOP);
-        IntStream yDownward = IntStream.rangeClosed(Coordinate.BOTTOM, coordinate.y);
+        this.eatableArea = new HashSet<>();
 
-        Stream<Coordinate> xStream = IntStream.concat(xLeftward, xRightward).boxed()
-                .filter(Objects::nonNull)
-                .map(xi -> Coordinates.of(xi, coordinate.y));
+        for (int xi = coordinate.x+1; xi <= Coordinate.RIGHT; xi++) {
+            Coordinate coord = Coordinates.of(xi, coordinate.y);
+            if (board.hasPieceOn(coord)) {
+                if (board.hasEnemyPieceOn(faction, coord)) {
+                    this.eatableArea.add(coord);
+                    break;
+                } else {
+                    break;
+                }
+            }
+        }
 
-        Stream<Coordinate> yStream = IntStream.concat(yUpward, yDownward).boxed()
-                .filter(Objects::nonNull)
-                .map(yi -> Coordinates.of(coordinate.x, yi));
+        for (int xi = coordinate.x-1; xi >= Coordinate.LEFT; xi--) {
+            Coordinate coord = Coordinates.of(xi, coordinate.y);
+            if (board.hasPieceOn(coord)) {
+                if (board.hasEnemyPieceOn(faction, coord)) {
+                    this.eatableArea.add(coord);
+                    break;
+                } else {
+                    break;
+                }
+            }
+        }
 
-        this.eatableArea = Stream.concat(xStream, yStream)
-                .filter(Coordinate::withinWholeField)
-                .filter(coord -> !board.hasFriendPieceOn(this.faction, coord))
-                .collect(Collectors.toSet());
+        for (int yi = coordinate.y+1; yi <= Coordinate.TOP; yi++) {
+            Coordinate coord = Coordinates.of(this.coordinate.x, yi);
+            if (board.hasPieceOn(coord)) {
+                if (board.hasEnemyPieceOn(faction, coord)) {
+                    this.eatableArea.add(coord);
+                    break;
+                } else {
+                    break;
+                }
+            }
+        }
+
+        for (int yi = coordinate.y-1; yi >= Coordinate.BOTTOM; yi--) {
+            Coordinate coord = Coordinates.of(this.coordinate.x, yi);
+            if (board.hasPieceOn(coord)) {
+                if (board.hasEnemyPieceOn(faction, coord)) {
+                    this.eatableArea.add(coord);
+                    break;
+                } else {
+                    break;
+                }
+            }
+        }
     }
 
     @Override
     public void updateMovableArea(final Board board) {
-        IntStream xRightward = IntStream.rangeClosed(coordinate.x, Coordinate.RIGHT);
-        IntStream xLeftward = IntStream.rangeClosed(Coordinate.LEFT, coordinate.x);
-        IntStream yUpward = IntStream.rangeClosed(coordinate.y, Coordinate.TOP);
-        IntStream yDownward = IntStream.rangeClosed(Coordinate.BOTTOM, coordinate.y);
+        this.movableArea = new HashSet<>();
 
-        Stream<Coordinate> xStream = IntStream.concat(xLeftward, xRightward).boxed()
-                .filter(Objects::nonNull)
-                .map(xi -> Coordinates.of(xi, coordinate.y));
+        for (int xi = coordinate.x+1; xi <= Coordinate.RIGHT; xi++) {
+            Coordinate coord = Coordinates.of(xi, coordinate.y);
+            if (board.hasPieceOn(coord)) {
+                break;
+            } else {
+                this.movableArea.add(coord);
+            }
+        }
 
-        Stream<Coordinate> yStream = IntStream.concat(yUpward, yDownward).boxed()
-                .filter(Objects::nonNull)
-                .map(yi -> Coordinates.of(coordinate.x, yi));
+        for (int xi = coordinate.x-1; xi >= Coordinate.LEFT; xi--) {
+            Coordinate coord = Coordinates.of(xi, coordinate.y);
+            if (board.hasPieceOn(coord)) {
+                break;
+            } else {
+                this.movableArea.add(coord);
+            }
+        }
 
-        movableArea = Stream.concat(xStream, yStream)
-                .filter(Coordinate::withinWholeField)
-                .filter(coord -> !board.hasPieceOn(coord))
-                .collect(Collectors.toSet());
+        for (int yi = coordinate.y+1; yi <= Coordinate.TOP; yi++) {
+            Coordinate coord = Coordinates.of(this.coordinate.x, yi);
+            if (board.hasPieceOn(coord)) {
+                break;
+            } else {
+                this.movableArea.add(coord);
+            }
+        }
+
+        for (int yi = coordinate.y-1; yi >= Coordinate.BOTTOM; yi--) {
+            Coordinate coord = Coordinates.of(this.coordinate.x, yi);
+            if (board.hasPieceOn(coord)) {
+                break;
+            } else {
+                this.movableArea.add(coord);
+            }
+        }
     }
 }

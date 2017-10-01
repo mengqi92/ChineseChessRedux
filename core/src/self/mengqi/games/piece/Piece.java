@@ -15,18 +15,30 @@ import static self.mengqi.games.enums.PieceEnums.*;
 // FIXME the extending here is just to make logging magic work, a better solution is needed.
 public interface Piece extends HumanFriendly {
     /**
-     * tryToMove to destination
+     * is the destination reachable
      * @param destination
-     * @return is the destination reached
+     * @return true if the destination can be reached
      */
-    boolean tryToMove(Board board, Coordinate destination);
+    boolean isReachable(Coordinate destination);
 
     /**
-     * try to eat the piece on the destination
+     * move the piece to the destination
      * @param destination
-     * @return true if the piece is eated
+     * @return
      */
-    boolean tryToEat(Board board, Coordinate destination);
+    void moveTo(Coordinate destination);
+
+    /**
+     * is the piece on the destination eatable
+     * @param destination
+     * @return true if the piece on the destination is eatable
+     */
+    boolean isEatable(Coordinate destination);
+
+    /**
+     * trigger updating movable and eatable areas
+     */
+    void updateAreas(Board board);
 
     /**
      * toggle status between activated and idle

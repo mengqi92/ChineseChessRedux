@@ -25,7 +25,7 @@ public class Zu extends AbstractPiece {
             this.eatableArea = Stream.of(Coordinate.forward(faction, coordinate, 1))
                     .filter(Objects::nonNull)
                     .filter(Coordinate::withinWholeField)
-                    .filter(coord -> !board.hasFriendPieceOn(this.faction, coord))
+                    .filter(coord -> board.hasEnemyPieceOn(this.faction, coord))
                     .collect(Collectors.toSet());
         } else {
             this.eatableArea = Stream.of(Coordinate.forward(faction, coordinate, 1),

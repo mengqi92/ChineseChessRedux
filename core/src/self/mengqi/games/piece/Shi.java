@@ -27,7 +27,7 @@ public class Shi extends AbstractPiece {
                 .map(xy -> Coordinates.of(coordinate.x+xy[0], coordinate.y+xy[1]))
                 .filter(Objects::nonNull)
                 .filter(coord -> Coordinate.withinCamp(faction, coord))
-                .filter(coord -> !board.hasFriendPieceOn(this.faction, coord))
+                .filter(coord -> board.hasEnemyPieceOn(this.faction, coord))
                 .collect(Collectors.toSet());
     }
 

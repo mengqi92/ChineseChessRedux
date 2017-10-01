@@ -39,33 +39,14 @@ public abstract class AbstractPiece implements Piece {
     @Override
     public abstract void updateMovableArea(final Board board);
 
-    @Override
-    public boolean tryToMove(final Board board, final Coordinate destination) {
-        if (isReachable(destination)) {
-            this.moveTo(board, destination);
-            return true;
-        } else {
-            LogUtils.debugging("piece", this, "cant move to", destination);
-            return false;
-        }
-    }
-
-    private void moveTo(final Board board, final Coordinate destination) {
+    public void moveTo(final Coordinate destination) {
         coordinate = destination;
-        updateMovableArea(board);
-        updateEatableArea(board);
         LogUtils.debugging("piece", this, " -> ", destination);
     }
 
-    @Override
-    public boolean tryToEat(final Board board, final Coordinate destination) {
-        if (isEatable(destination)) {
-            this.moveTo(board, destination);
-            return true;
-        } else {
-            LogUtils.debugging("piece", this, "cannot eat the piece at", destination);
-            return false;
-        }
+    public void updateAreas(final Board board) {
+        updateMovableArea(board);
+        updateEatableArea(board);
     }
 
     /**
@@ -73,7 +54,7 @@ public abstract class AbstractPiece implements Piece {
      * @param destination
      * @return true if the destination is reachable
      */
-    protected boolean isReachable(Coordinate destination) {
+    public boolean isReachable(Coordinate destination) {
         return movableArea.contains(destination);
     }
 
@@ -82,7 +63,7 @@ public abstract class AbstractPiece implements Piece {
      * @param destination
      * @return true if the enemy piece is eatable
      */
-    protected boolean isEatable(Coordinate destination) {
+    public boolean isEatable(Coordinate destination) {
         return eatableArea.contains(destination);
     }
 

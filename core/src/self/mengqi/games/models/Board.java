@@ -64,6 +64,7 @@ public class Board {
             board = new Board();
             board.initTiles();
             board.initPieces();
+            board.updateAllPieces();
         }
         return board;
     }
@@ -86,16 +87,12 @@ public class Board {
                 Piece redPiece = Pieces.of(entrySet.getKey(), Red, coordinate);
                 pieces.add(redPiece);
                 if (redPiece != null) {
-                    redPiece.updateMovableArea(this);
-                    redPiece.updateEatableArea(this);
                     coordToPiece.put(redPiece.getCoordinate(), redPiece);
                 }
 
                 Piece blackPiece = Pieces.of(entrySet.getKey(), Black, coordinate.horizMirroredCoord());
                 pieces.add(blackPiece);
                 if (blackPiece != null) {
-                    blackPiece.updateMovableArea(this);
-                    blackPiece.updateEatableArea(this);
                     coordToPiece.put(blackPiece.getCoordinate(), blackPiece);
                 }
 
@@ -104,6 +101,12 @@ public class Board {
                     blackJiang = blackPiece;
                 }
             }
+        }
+    }
+
+    private void updateAllPieces() {
+        for (Piece piece : this.pieces) {
+            piece.updateAreas(this);
         }
     }
 
@@ -155,10 +158,13 @@ public class Board {
      */
     private void tryToMove(Coordinate destination) {
         Coordinate original = activatedPiece.getCoordinate();
-        if (this.activatedPiece.tryToMove(this, destination)) {
+        if (this.activatedPiece.isReachable(destination)) {
+            this.activatedPiece.moveTo(destination);
             this.coordToPiece.remove(original);
             this.coordToPiece.put(destination, activatedPiece);
-            updateTiles(activatedPiece);
+            this.updateAllPieces();
+            this.updateTiles(activatedPiece);
+            LogUtils.debugging("board", activatedPiece, "cant move to", destination);
         }
     }
 
@@ -169,12 +175,13 @@ public class Board {
      */
     private void tryToEat(Piece targetPiece) {
         Coordinate destination = targetPiece.getCoordinate();
-
-        if (activatedPiece.tryToEat(this, destination)) {
-            LogUtils.debugging("board", activatedPiece, "ate", targetPiece);
+        if (activatedPiece.isEatable(destination)) {
+            this.activatedPiece.moveTo(destination);
             letItDie(targetPiece);
             this.coordToPiece.put(destination, activatedPiece);
-            updateTiles(activatedPiece);
+            this.updateAllPieces();
+            this.updateTiles(activatedPiece);
+            LogUtils.debugging("board", activatedPiece, "ate", targetPiece);
         } else {
             LogUtils.debugging("board", activatedPiece, "cannot eat", targetPiece);
         }
@@ -185,14 +192,20 @@ public class Board {
      * @param piece
      */
     private void updateTiles(Piece piece) {
-        tiles.forEach(tile -> tile.setStatus(Idle));
-        for (Coordinate coord : piece.getMovableArea()) {
-            Tile tile = coordToTile.get(coord);
-            tile.setStatus(Movable);
-        }
-        for (Coordinate coord : piece.getEatableArea()) {
-            Tile tile = coordToTile.get(coord);
-            tile.setStatus(Eatable);
+        if (piece == null) {
+            for (Tile tile : tiles) {
+                tile.setStatus(Idle);
+            }
+        } else {
+            tiles.forEach(tile -> tile.setStatus(Idle));
+            for (Coordinate coord : piece.getMovableArea()) {
+                Tile tile = coordToTile.get(coord);
+                tile.setStatus(Movable);
+            }
+            for (Coordinate coord : piece.getEatableArea()) {
+                Tile tile = coordToTile.get(coord);
+                tile.setStatus(Eatable);
+            }
         }
     }
 
@@ -211,6 +224,7 @@ public class Board {
             targetPiece.toggleActivated();
             activatedPiece = targetPiece;
         }
+        this.updateTiles(activatedPiece);
     }
 
     @Nullable
@@ -257,6 +271,17 @@ public class Board {
      */
     public boolean hasFriendPieceOn(PieceEnums.Faction faction, Coordinate coord) {
         return coordToPiece.containsKey(coord) &&
-                faction != coordToPiece.get(coord).getFaction().enemy();
+                faction == coordToPiece.get(coord).getFaction();
+    }
+
+    /**
+     * is the piece on the coord is enemy
+     * @param faction
+     * @param coord
+     * @return true if the piece is hostile
+     */
+    public boolean hasEnemyPieceOn(PieceEnums.Faction faction, Coordinate coord) {
+        return coordToPiece.containsKey(coord) &&
+                faction == coordToPiece.get(coord).getFaction().enemy();
     }
 }
