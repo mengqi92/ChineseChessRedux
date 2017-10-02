@@ -165,10 +165,10 @@ public class Board {
      * @param destination
      */
     private void tryToMove(Coordinate destination) {
-        Coordinate original = activatedPiece.getCoordinate();
+        Coordinate origin = activatedPiece.getCoordinate();
         if (this.activatedPiece.isReachable(destination)) {
             this.activatedPiece.moveTo(destination);
-            this.coordToPiece.remove(original);
+            this.coordToPiece.remove(origin);
             this.coordToPiece.put(destination, activatedPiece);
             this.updateAllPieces();
             this.updateTiles(activatedPiece);
@@ -182,10 +182,12 @@ public class Board {
      * @param targetPiece the target piece on another faction
      */
     private void tryToEat(Piece targetPiece) {
+        Coordinate origin = activatedPiece.getCoordinate();
         Coordinate destination = targetPiece.getCoordinate();
         if (activatedPiece.isEatable(destination)) {
             this.activatedPiece.moveTo(destination);
             letItDie(targetPiece);
+            this.coordToPiece.remove(origin);
             this.coordToPiece.put(destination, activatedPiece);
             this.updateAllPieces();
             this.updateTiles(activatedPiece);
