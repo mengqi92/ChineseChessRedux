@@ -3,9 +3,11 @@ package self.mengqi.games.actors;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.Sprite;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.scenes.scene2d.actions.Actions;
+import com.badlogic.gdx.utils.Align;
 import self.mengqi.games.models.Position;
 import self.mengqi.games.piece.Piece;
 
@@ -15,25 +17,33 @@ import self.mengqi.games.piece.Piece;
  */
 public class PieceActor extends Actor {
     private Piece piece;
-    private Sprite sprite;
+    private Texture texture;
     private Position position;
-    private Sprite activeSprite;
-    private Sprite idleSprite;
+    private Texture activeTexure;
+    private Texture idleTexture;
+    private static float MOVING_DURATION = 0.45f;
 
     public PieceActor(Piece piece) {
         this.setName(piece.toReadableString());
         this.piece = piece;
         this.position = new Position(piece.getCoordinate());
 
-        activeSprite = new Sprite(new Texture(Gdx.files.internal(
+        activeTexure = new Texture(Gdx.files.internal(
                 String.format("pieces/activated/%s_%s.gif",
                         this.piece.getFaction().getCode(),
-                        this.piece.getType().getCode()))));
+                        this.piece.getType().getCode())));
 
-        idleSprite = new Sprite(new Texture(Gdx.files.internal(
+        idleTexture = new Texture(Gdx.files.internal(
                 String.format("pieces/idle/%s_%s.gif",
                         this.piece.getFaction().getCode(),
-                        this.piece.getType().getCode()))));
+                        this.piece.getType().getCode())));
+        texture = idleTexture;
+
+        setWidth(texture.getWidth());
+        setHeight(texture.getWidth());
+        setPosition(position.x, position.y, Align.center);
+
+        setTouchable(Touchable.enabled);
     }
 
     @Override
@@ -43,23 +53,30 @@ public class PieceActor extends Actor {
                 this.setVisible(false);
                 return;
             case Activated:
-                sprite = activeSprite;
+                texture = activeTexure;
                 break;
             case Idle:
-                sprite = idleSprite;
+                texture = idleTexture;
                 break;
         }
-
+        Position lastPosition = this.position;
         this.position = new Position(piece.getCoordinate());
-        sprite.setCenter(position.x, position.y);
-
-        setBounds(sprite.getX(), sprite.getY(), sprite.getWidth(), sprite.getHeight());
-        setTouchable(Touchable.enabled);
+        if (!this.position.equals(lastPosition)) {
+            this.addAction(Actions.moveToAligned(position.x, position.y, Align.center,
+                    MOVING_DURATION, Interpolation.sineOut));
+        }
+        super.act(delta);
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
-        sprite.draw(batch, parentAlpha);
+        batch.setColor(getColor().r, getColor().g, getColor().b, getColor().a);
+        batch.draw(texture, getX(), getY(), getWidth(), getHeight());
+    }
+
+    @Override
+    protected void positionChanged() {
+        setBounds(getX(), getY(), getWidth(), getHeight());
     }
 
     @Override

@@ -15,7 +15,6 @@ public class Pao extends AbstractPiece {
         super(PieceEnums.Type.Pao, faction, coordinate);
     }
 
-    // FIXME 不正确
     @Override
     public void updateEatableArea(Board board) {
         this.eatableArea = new HashSet<>();

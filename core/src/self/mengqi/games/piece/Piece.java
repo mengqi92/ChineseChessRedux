@@ -12,7 +12,6 @@ import static self.mengqi.games.enums.PieceEnums.*;
  * Created by Mengqi on 2017/9/27.
  * The interface of pieces
  */
-// FIXME the extending here is just to make logging magic work, a better solution is needed.
 public interface Piece extends HumanFriendly {
     /**
      * is the destination reachable

@@ -1,29 +1,42 @@
 package self.mengqi.games.actors;
 
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Touchable;
+import com.badlogic.gdx.utils.Align;
+import self.mengqi.games.common.PresetColors;
 import self.mengqi.games.models.Position;
 import self.mengqi.games.models.Tile;
+
+import static com.badlogic.gdx.scenes.scene2d.actions.Actions.*;
 
 /**
  * Created by Mengqi on 2017/9/24.
  */
 public class TileActor extends Actor {
     private Tile tile;
-    private Sprite sprite;
+    private Texture texture;
+    private Texture defaultTexture;
+    private Texture targetTexture;
 
     private Position position;
 
     public TileActor(Tile tile) {
-        sprite = new Sprite(new Texture(Gdx.files.internal("tile.png")));
-        this.tile = tile;
-
         position = new Position(tile.getCoordinate());
-        sprite.setCenter(position.x, position.y);
+
+        defaultTexture = new Texture(Gdx.files.internal("tile.png"));
+//        targetTexture = new Texture(Gdx.files.internal("target.gif"));
+
+        this.tile = tile;
+        texture = defaultTexture;
+
+        setWidth(texture.getWidth());
+        setHeight(texture.getHeight());
+        setPosition(position.x, position.y, Align.center);
+        setColor(Color.WHITE);
         setTouchable(Touchable.disabled);
     }
 
@@ -31,25 +44,28 @@ public class TileActor extends Actor {
     public void act(float delta) {
         switch (tile.getStatus()) {
             case Idle:
-                this.setVisible(false);
+                addAction(color(Color.CLEAR, 0.2f));
                 break;
             case Movable:
-                this.setVisible(true);
-//                sprite.setColor(0.793f, 0.849f, 0.383f, 0.7f);
-//                sprite.setColor(0.899f, 0.835f, 0.405f, 0.7f);
-                sprite.setColor(1f, 1f, 1f, 0.3f);
+                addAction(sequence(delay(0.1f), color(PresetColors.LIGHT_WHITE, 0.2f)));
                 break;
             case Eatable:
-                this.setVisible(true);
-                sprite.setColor(0.849f, 0.439f, 0.383f, 0.9f);
+                addAction(color(PresetColors.LIGHT_RED, 0.3f));
                 break;
         }
+        super.act(delta);
+    }
+
+    @Override
+    protected void positionChanged() {
+        setBounds(getX(), getY(), getWidth(), getHeight());
     }
 
     @Override
     public void draw(Batch batch, float parentAlpha) {
         if (!isVisible())
             return;
-        sprite.draw(batch, parentAlpha);
+        batch.setColor(getColor().r, getColor().g, getColor().b, getColor().a);
+        batch.draw(texture, getX(), getY(), getWidth(), getHeight());
     }
 }
