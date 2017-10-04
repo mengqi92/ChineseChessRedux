@@ -7,7 +7,7 @@ import self.mengqi.games.ChineseChess;
 public class DesktopLauncher {
 	public static void main (String[] arg) {
 		LwjglApplicationConfiguration config = new LwjglApplicationConfiguration();
-		config.width = 573;
+		config.width = 573 + 358;
 		config.height = 640;
 		config.resizable = false;
 		new LwjglApplication(new ChineseChess(), config);

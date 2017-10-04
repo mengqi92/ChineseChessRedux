@@ -27,6 +27,7 @@ allprojects {
         ashleyVersion = '1.7.0'
         aiVersion = '1.8.0'
         squidVersion = '3.0.0-b8'
+        testngVersion = '6.3.1'
     }
 
     repositories {
@@ -75,6 +76,7 @@ project(":core") {
         compile "com.badlogicgames.ashley:ashley:$ashleyVersion"
         compile "com.squidpony:squidlib-util:$squidVersion:sources"
         compile "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"  // use freetype font instead of bitmap font
+        compile "org.testng:testng:$testngVersion"
     }
 }
 

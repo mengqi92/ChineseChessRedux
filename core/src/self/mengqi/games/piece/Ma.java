@@ -64,4 +64,5 @@ public class Ma extends AbstractPiece {
         }
     }
 
+
 }

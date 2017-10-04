@@ -1,21 +1,19 @@
 package self.mengqi.games.models;
 
+import com.badlogic.gdx.Gdx;
 import com.sun.istack.internal.Nullable;
-import self.mengqi.games.enums.PieceEnums;
 import self.mengqi.games.piece.Piece;
 import self.mengqi.games.piece.Pieces;
 import self.mengqi.games.utils.LogUtils;
 
 import java.util.*;
 
+import static self.mengqi.games.enums.PieceEnums.*;
 import static self.mengqi.games.enums.PieceEnums.Faction.Black;
 import static self.mengqi.games.enums.PieceEnums.Faction.Red;
-import static self.mengqi.games.enums.PieceEnums.Status;
 import static self.mengqi.games.enums.PieceEnums.Type;
 import static self.mengqi.games.enums.PieceEnums.Type.*;
-import static self.mengqi.games.models.Tile.TileStatus.Eatable;
-import static self.mengqi.games.models.Tile.TileStatus.Idle;
-import static self.mengqi.games.models.Tile.TileStatus.Movable;
+import static self.mengqi.games.models.Tile.TileStatus.*;
 
 /**
  * Created by Mengqi on 2017/9/16.
@@ -52,8 +50,11 @@ public class Board {
     // 记录 坐标->Tile 的映射关系
     private HashMap<Coordinate, Tile> coordToTile = new HashMap<>();
 
-    private Piece blackJiang;
-    private Piece redJiang;
+    private Piece blackJiang;// 黑将棋子的引用
+    private Piece redJiang;  // 红将棋子的引用
+    private Faction initialFaction = Red;
+    private Faction currentFaction = initialFaction;  // 当前走子阵营
+    private Piece jiangJunPiece;
 
     private Board() {}
 
@@ -113,9 +114,15 @@ public class Board {
      * 向所有棋子发布更新通知
      */
     private void updateAllPieces() {
+        Piece anyJiangJunPiece = null;  // 棋盘上是否有棋子正在将军
         for (Piece piece : this.pieces) {
             piece.updateAreas(this);
+            if (piece.getEatableArea().contains(board.getJiangCoord(piece.getFaction().enemy()))) {
+                anyJiangJunPiece = piece;
+            }
         }
+        jiangJunPiece = anyJiangJunPiece;
+        Gdx.app.debug("board", "将军！");
     }
 
     /**
@@ -131,7 +138,10 @@ public class Board {
             if (this.hasPieceActivated()) {
                 this.takeAction(targetPiece);
             } else {  // 当前棋盘没有子激活
-                this.toggleActivatePiece(targetPiece);
+                // 选择的棋子是当前的阵营时才激活该棋子
+                if (targetPiece.getFaction() == currentFaction) {
+                    this.toggleActivatePiece(targetPiece);
+                }
             }
         } else {  // 点击的位置没有棋子
             if (this.hasPieceActivated()) {
@@ -152,12 +162,23 @@ public class Board {
         if (targetPiece.equals(activatedPiece)) {
             toggleActivatePiece(targetPiece);
         } else {  // 否则判断是否是己方棋子
-            if (activatedPiece.sameSide(targetPiece)) {
+            if (targetPiece.getFaction() == currentFaction) {
                 toggleActivatePiece(targetPiece);
             } else {
                 tryToEat(targetPiece);
             }
         }
+    }
+
+    /**
+     * 切换当前走子阵营
+     */
+    private void switchFaction() {
+        updateAllPieces();
+        updateAreas(activatedPiece);
+        activatedPiece.setStatus(Status.Idle);
+        activatedPiece = null;
+        currentFaction = this.currentFaction.enemy();
     }
 
     /**
@@ -170,9 +191,8 @@ public class Board {
             this.activatedPiece.moveTo(destination);
             this.coordToPiece.remove(origin);
             this.coordToPiece.put(destination, activatedPiece);
-            this.updateAllPieces();
-            this.updateTiles(activatedPiece);
-            LogUtils.debugging("board", activatedPiece, "cant move to", destination);
+            LogUtils.debugging("board", activatedPiece, "move to", destination);
+            this.switchFaction();
         }
     }
 
@@ -189,9 +209,8 @@ public class Board {
             letItDie(targetPiece);
             this.coordToPiece.remove(origin);
             this.coordToPiece.put(destination, activatedPiece);
-            this.updateAllPieces();
-            this.updateTiles(activatedPiece);
             LogUtils.debugging("board", activatedPiece, "ate", targetPiece);
+            this.switchFaction();
         } else {
             LogUtils.debugging("board", activatedPiece, "cannot eat", targetPiece);
         }
@@ -201,7 +220,7 @@ public class Board {
      * update tiles' status based on movable and eatable area of the piece
      * @param piece
      */
-    private void updateTiles(Piece piece) {
+    private void updateAreas(Piece piece) {
         if (piece == null) {
             for (Tile tile : tiles) {
                 tile.setStatus(Idle);
@@ -217,7 +236,28 @@ public class Board {
                 tile.setStatus(Eatable);
             }
         }
-        tiles.forEach(System.out::println);
+    }
+
+    /**
+     * get the faction of activated piece
+     * @return
+     */
+    public Faction getCurrentFaction() {
+        return currentFaction;
+    }
+
+    public Faction getEnemyFaction() { return currentFaction.enemy(); }
+
+    /**
+     * get the type of activated piece
+     * @return
+     */
+    public Type currentPieceType() {
+        if (null != activatedPiece) {
+            return activatedPiece.getType();
+        } else {
+            return Jiang;
+        }
     }
 
     /**
@@ -235,11 +275,11 @@ public class Board {
             targetPiece.toggleActivated();
             activatedPiece = targetPiece;
         }
-        this.updateTiles(activatedPiece);
+        this.updateAreas(activatedPiece);
     }
 
     @Nullable
-    public Coordinate getJiangCoord(PieceEnums.Faction faction) {
+    public Coordinate getJiangCoord(Faction faction) {
         switch (faction) {
             case Black:
                 return (null != blackJiang) ? blackJiang.getCoordinate() : null;
@@ -280,7 +320,7 @@ public class Board {
      * @param coord
      * @return true if the piece is our friend
      */
-    public boolean hasFriendPieceOn(PieceEnums.Faction faction, Coordinate coord) {
+    public boolean hasFriendPieceOn(Faction faction, Coordinate coord) {
         return coordToPiece.containsKey(coord) &&
                 faction == coordToPiece.get(coord).getFaction();
     }
@@ -291,8 +331,16 @@ public class Board {
      * @param coord
      * @return true if the piece is hostile
      */
-    public boolean hasEnemyPieceOn(PieceEnums.Faction faction, Coordinate coord) {
+    public boolean hasEnemyPieceOn(Faction faction, Coordinate coord) {
         return coordToPiece.containsKey(coord) &&
                 faction == coordToPiece.get(coord).getFaction().enemy();
+    }
+
+    public boolean isJiangJuning() {
+        return jiangJunPiece != null;
+    }
+
+    public Piece getJiangJunPiece() {
+        return jiangJunPiece;
     }
 }
