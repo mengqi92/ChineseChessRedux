@@ -1,6 +1,6 @@
 # 中国象棋重制计划
 ## 最新版运行截图
-![当前游戏运行时截图](https://github.com/mengqi92/ChineseChessRedux/blob/master/readme_assets/v0.0.2.gif)
+![当前游戏运行时截图](https://github.com/mengqi92/ChineseChessRedux/blob/master/readme_assets/v0.0.3.gif)
 
 ## 简介
 一直有重制当年本科时制作的游戏的想法，这段时间忙里偷闲终于打算开始做了。
@@ -42,6 +42,7 @@
 - [X] UI 界面
 - [X] 轮流走子
 - [X] 将军的判断与显示
-- [ ] Box2DLight 阴影渲染
 - [X] 棋子与武将的映射关系
+- [ ] 开局与结束界面
 - [ ] 单个棋子的统计数值
+- [ ] Box2DLight 阴影渲染
