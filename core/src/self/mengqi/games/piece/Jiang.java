@@ -6,7 +6,6 @@ import self.mengqi.games.models.Coordinate;
 import self.mengqi.games.models.Coordinates;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -21,7 +20,18 @@ public class Jiang extends AbstractPiece {
 
     @Override
     public void updateEatableArea(Board board) {
-        this.eatableArea = new HashSet<>();
+        // 普通的吃法
+        int[][] candidates = new int[][]{
+                {1, 0}, {0, 1}, {-1, 0}, {0, -1}
+        };
+        this.eatableArea = Arrays.stream(candidates)
+                .map(xy -> Coordinates.of(coordinate.x+xy[0], coordinate.y+xy[1]))
+                .filter(Objects::nonNull)
+                .filter(coord -> Coordinate.withinCamp(faction, coord))
+                .filter(coord -> board.hasEnemyPieceOn(faction, coord))
+                .collect(Collectors.toSet());
+
+        // 老将面对面也可吃
         Coordinate enemyCoord = board.getJiangCoord(faction.enemy());
         // 对面的将还没初始化
         if (null == enemyCoord)

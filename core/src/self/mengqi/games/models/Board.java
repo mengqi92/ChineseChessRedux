@@ -1,6 +1,5 @@
 package self.mengqi.games.models;
 
-import com.badlogic.gdx.Gdx;
 import com.sun.istack.internal.Nullable;
 import self.mengqi.games.piece.Piece;
 import self.mengqi.games.piece.Pieces;
@@ -11,7 +10,6 @@ import java.util.*;
 import static self.mengqi.games.enums.PieceEnums.*;
 import static self.mengqi.games.enums.PieceEnums.Faction.Black;
 import static self.mengqi.games.enums.PieceEnums.Faction.Red;
-import static self.mengqi.games.enums.PieceEnums.Type;
 import static self.mengqi.games.enums.PieceEnums.Type.*;
 import static self.mengqi.games.models.Tile.TileStatus.*;
 
@@ -54,7 +52,7 @@ public class Board {
     private Piece redJiang;  // 红将棋子的引用
     private Faction initialFaction = Red;
     private Faction currentFaction = initialFaction;  // 当前走子阵营
-    private Piece jiangJunPiece;
+    private Piece checkingPiece;
 
     private Board() {}
 
@@ -114,15 +112,20 @@ public class Board {
      * 向所有棋子发布更新通知
      */
     private void updateAllPieces() {
-        Piece anyJiangJunPiece = null;  // 棋盘上是否有棋子正在将军
+        Piece anyCheckingPiece = null;  // 棋盘上是否有棋子正在将军
         for (Piece piece : this.pieces) {
+            if (piece.getStatus() == Status.Died) {
+                continue;
+            }
             piece.updateAreas(this);
             if (piece.getEatableArea().contains(board.getJiangCoord(piece.getFaction().enemy()))) {
-                anyJiangJunPiece = piece;
+                anyCheckingPiece = piece;
             }
         }
-        jiangJunPiece = anyJiangJunPiece;
-        Gdx.app.debug("board", "将军！");
+        checkingPiece = anyCheckingPiece;
+        if (null != checkingPiece) {
+            LogUtils.debugging("board", checkingPiece, "将军！");
+        }
     }
 
     /**
@@ -336,11 +339,11 @@ public class Board {
                 faction == coordToPiece.get(coord).getFaction().enemy();
     }
 
-    public boolean isJiangJuning() {
-        return jiangJunPiece != null;
+    public boolean isChecking() {
+        return checkingPiece != null;
     }
 
-    public Piece getJiangJunPiece() {
-        return jiangJunPiece;
+    public Piece getCheckingPiece() {
+        return checkingPiece;
     }
 }

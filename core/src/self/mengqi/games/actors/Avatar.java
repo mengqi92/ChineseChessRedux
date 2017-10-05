@@ -55,8 +55,8 @@ public class Avatar extends Image {
 
     @Override
     public void act(float delta) {
-        if (board.isJiangJuning()) {
-            Piece jiangJunPiece = board.getJiangJunPiece();
+        if (board.isChecking()) {
+            Piece jiangJunPiece = board.getCheckingPiece();
             drawable = pieceDrawables.get(jiangJunPiece.getFaction()).get(jiangJunPiece.getType());
 //            drawable = pieceDrawables.get(board.get()).get(board.currentPieceType());
             setDrawable(drawable);
